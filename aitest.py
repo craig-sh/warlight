@@ -71,10 +71,12 @@ class Bot(object):
                 outStr += " " + str(placed_count) + ","
 
         for region_id in self.map.visible_regions:
-            if armies_left  < 1:
+            if armies_left  < 2:
                 break
             if regions[region_id].occupant == self.name:
                 for neighbor in regions[region_id].neighbors:
+                    if armies_left  < 2:
+                        break
                     if neighbor.occupant == 'neutral':
                         armies_left -= 1
                         outStr += self.name + " place_armies " + str(region_id)
@@ -107,21 +109,20 @@ class Bot(object):
 
                 if target and target.armies < regions[region_id].armies:
                     outStr += (self.name + " attack/transfer " + region_id + " "
-                                   + str(regions[region_id].armies - 1) + " "
-                                   + target.id + ",")
+                            + target.id + " " +  str(regions[region_id].armies - 1)+ ",")
                 elif target == None and len(to_scout):
                     armies = regions[region_id].armies
                     #Send two armies to each region and the remaining to the last unscouted region
                     #This will leave only one army in the current region
                     for i in range(len(to_scout)):
-                        if armies <= 2:
+                        if armies < 4:
                             break
                         if i == (len(to_scout) - 1):
                             to_send = armies
                         else:
                             to_send = 2
                         outStr += (self.name + " attack/transfer " + region_id +
-                                 " "+ str(to_send) + " " +  to_scout[i].id + ",")
+                                 " " +  to_scout[i].id + " " +str(to_send) + ",")
                         armies -= to_send
         if outStr == "":
             outStr += "No moves"
