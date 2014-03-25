@@ -1,3 +1,5 @@
+from __future__ import print_function
+import sys
 from sys import stdin,stdout
 from map import Map
 class Bot(object):
@@ -36,7 +38,7 @@ class Bot(object):
             else:
                 continue
             break
-        print outStr
+        print (outStr)
 
     """
     #Place armies in regions that are connected
@@ -53,6 +55,7 @@ class Bot(object):
         regions = self.map.regions
         outStr = ""
         SAFETY_FACTOR = 1.5
+        MIN_ARMIES = 1
         for region_id in self.map.visible_regions:
             if regions[region_id].occupant ==  self.name:
                 for neighbor in regions[region_id].neighbors:
@@ -72,7 +75,7 @@ class Bot(object):
                 outStr += " " + str(placed_count) + ","
 
         for region_id in self.map.visible_regions:
-            if armies_left  < 2:
+            if armies_left  <= MIN_ARMIES:
                 break
             if regions[region_id].occupant == self.name:
                 for neighbor in regions[region_id].neighbors:
@@ -82,9 +85,19 @@ class Bot(object):
                         armies_left -= 1
                         outStr += self.name + " place_armies " + str(region_id)
                         outStr += " " + str(1) +","
+        #If we are here, all regions are taken
+        #Reinforice the area closest to the strongest enemy
+        #region
+        if outStr == "":
+            for region_id in sorted(threat,key=threat.get,reverse=True):
+                outStr += self.name + " place_armies " + str(region_id)
+                outStr += " " + str(armies) + ","
+                break
 
-
-        print outStr
+        if outStr == "":
+            print ("ERROR: unplaced armies" , file=sys.stderr)
+            outStr += "No moves"
+        print (outStr)
     """
         #Scan through all visible regions belonging to us
         #Attack the neighbor with the highest amount of enemy units
@@ -134,7 +147,7 @@ class Bot(object):
                         armies -= to_send
         if outStr == "":
             outStr += "No moves"
-        print outStr
+        print (outStr)
 
     def process_input(self,cmd):
         if cmd[0] == 'settings':
