@@ -52,6 +52,7 @@ class Bot(object):
         armies_left = armies
         regions = self.map.regions
         outStr = ""
+        SAFETY_FACTOR = 1.5
         for region_id in self.map.visible_regions:
             if regions[region_id].occupant ==  self.name:
                 for neighbor in regions[region_id].neighbors:
@@ -62,7 +63,7 @@ class Bot(object):
         for region_id in sorted(threat,key=threat.get,reverse=True):
             if not armies_left:
                 break
-            if threat[region_id] > regions[region_id].armies:
+            if threat[region_id] > regions[region_id].armies * SAFETY_FACTOR:
                 outStr += self.name + " place_armies " + str(region_id)
                 placed_count = 0
                 while armies_left > 0:
@@ -96,6 +97,8 @@ class Bot(object):
     def attack(self):
         regions = self.map.regions
         outStr = ""
+        SAFETY_FACTOR = 1.5
+        SCOUT_FORCE = 3
         for region_id in self.map.visible_regions:
             if regions[region_id].occupant ==  self.name:
                 target = None
@@ -106,21 +109,26 @@ class Bot(object):
                             target = neighbor
                     elif neighbor.occupant == 'neutral':
                         to_scout.append(neighbor)
-
-                if target and target.armies < regions[region_id].armies:
+###################ATTACK ADJACENT ARMIES###############################################
+                if target and target.armies * SAFETY_FACTOR < regions[region_id].armies:
                     outStr += (self.name + " attack/transfer " + region_id + " "
                             + target.id + " " +  str(regions[region_id].armies - 1)+ ",")
+##########################################################################################
+            #FIXME- if we have a region that is surrounded by friendly regions
+            #       we need to send all the armies from that regions to reinforce
+            #       the closest region in danger
+##########################SCOUTING###############################################
                 elif target == None and len(to_scout):
                     armies = regions[region_id].armies
                     #Send two armies to each region and the remaining to the last unscouted region
                     #This will leave only one army in the current region
                     for i in range(len(to_scout)):
-                        if armies < 4:
+                        if armies <= SCOUT_FORCE:
                             break
                         if i == (len(to_scout) - 1):
-                            to_send = armies
+                            to_send = armies - 1
                         else:
-                            to_send = 2
+                            to_send = SCOUT_FORCE
                         outStr += (self.name + " attack/transfer " + region_id +
                                  " " +  to_scout[i].id + " " +str(to_send) + ",")
                         armies -= to_send
