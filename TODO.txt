@@ -1,0 +1,6 @@
+If the current region borders an enemy and another friendly region borders taht enemy region too 
+and the current region's  army is less than the other friendly army, explore
+
+Bot always moves entire army currently. Some situations may require it not to.
+
+Bot always reinforces regions that are in danger of being taken over by enemies. Results in stalemates.

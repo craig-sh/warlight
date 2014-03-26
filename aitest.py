@@ -17,13 +17,13 @@ class Bot(object):
         count = {}
         picks = {}
         picks_left = 6
-        self.map.weight_super_regions()
+        #self.map.weight_super_regions()
         for region in regions:
             super_region = self.map.regions[region].super_region
             if not super_region in count:
                 count[super_region] = 0
                 picks[super_region] = []
-            count[super_region] += 1 + super_region.weighted_bonus * 0.5
+            count[super_region] += 1 + super_region.bonus * 0.2
             picks[super_region].append(region)
         outStr = ""
         for w in sorted(count,key=count.get,reverse=True):
@@ -150,8 +150,10 @@ class Bot(object):
                                  " " +  to_scout[i].id + " " +str(to_send) + ",")
                         armies -= to_send
                 ##Relocate armies to regions in need
-                elif safe_region:
-                    pass
+                elif safe_region and regions[region_id].armies > 1:
+                    path = self.map.closest_unowned_region(regions[region_id])
+                    outStr += (self.name + " attack/transfer " + region_id + " "
+                            + str(path[-1]) + " " +  str(regions[region_id].armies - 1)+ ",")
 
         if outStr == "":
             outStr += "No moves"

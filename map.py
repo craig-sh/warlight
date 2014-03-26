@@ -34,23 +34,37 @@ class Map(object):
         for region in self.regions:
             self.queue.append(region)
 
+    """
+    Returns the optimal path from source to dest
+    in the path variable in reverse order
+    Doesn't care about who owns things on the path
+    #FIXE - make path a queue not a list
+    """
     def get_path(self,source,dest,path):
         #This will return list of id's for the regions
         #on the shortest path
-        if source == dest:
-            return
-        elif dest.pi == None:
+
+        if dest == None or dest.pi == None:
             print ("ERROR: No path exists",file=sys.stderr)
             return None
+        if source == dest:
+            path.append(source.id)
+            return
         else :
             path.append(dest.id)
             return self.get_path(source,dest.pi,path)
 
+
+    """
+    Returns the closest node that
+    matches the terminate condition
+    """
     def BFS(self,source,terminate_case):
         source.color = 'GRAY'
         source.dis = 0
         source.pi = None
-        queue = deque([self.regions[source]])
+        queue = deque()
+        queue.append(source)
         while len(queue) != 0:
             u = queue.pop()
             self.clean_up_queue.append(u)
@@ -59,10 +73,11 @@ class Map(object):
                     v.color = 'GRAY'
                     v.dis = u.dis + 1
                     v.pi = u
-                    queue.appendLeft(v)
+                    queue.appendleft(v)
+                    self.clean_up_queue.append(v)
                 #if we found what we are looking for just exit
-                if terminate_case and terminate_case():
-                    return 
+                if terminate_case(v):
+                    return v
             #not really needed
             u.color = 'BLACK'
 
@@ -77,6 +92,16 @@ class Map(object):
     def update_region(self,region_id, occupant, armies):
         self.regions[region_id].occupant = occupant
         self.regions[region_id].armies = int(armies)
+
+    def closest_unowned_region(self,region):
+        path = []
+        dest = self.BFS(region,lambda x:x.occupant != region.occupant)
+        self.get_path(region,dest,path)
+        print ("Path:",path,file=sys.stderr)
+        self.clean_up()
+        return path
+
+
 
 
 
