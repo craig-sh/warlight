@@ -2,6 +2,7 @@ class SuperRegion(object):
     def __init__(self,i,bonus):
         self.id = i
         self.bonus = int(bonus)
+        self.weighted_bonus = 0
         self.children = []
     def add_child(self,child):
         #neighnor should be an object this will

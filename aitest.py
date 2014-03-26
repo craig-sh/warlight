@@ -17,12 +17,13 @@ class Bot(object):
         count = {}
         picks = {}
         picks_left = 6
+        self.map.weight_super_regions()
         for region in regions:
             super_region = self.map.regions[region].super_region
             if not super_region in count:
                 count[super_region] = 0
                 picks[super_region] = []
-            count[super_region] += 1 + super_region.bonus * 0.1
+            count[super_region] += 1 + super_region.weighted_bonus * 0.5
             picks[super_region].append(region)
         outStr = ""
         for w in sorted(count,key=count.get,reverse=True):
@@ -66,7 +67,7 @@ class Bot(object):
         for region_id in sorted(threat,key=threat.get,reverse=True):
             if not armies_left:
                 break
-            if threat[region_id] > regions[region_id].armies * SAFETY_FACTOR:
+            if threat[region_id] > regions[region_id].armies * SAFETY_FACTOR/2:
                 outStr += self.name + " place_armies " + str(region_id)
                 placed_count = 0
                 while armies_left > 0:
@@ -116,11 +117,14 @@ class Bot(object):
             if regions[region_id].occupant ==  self.name:
                 target = None
                 to_scout = []
+                safe_region = True
                 for neighbor in regions[region_id].neighbors:
                     if neighbor.occupant == self.opponent_name:
+                        safe_region = False
                         if target == None or neighbor.armies > target.armies:
                             target = neighbor
                     elif neighbor.occupant == 'neutral':
+                        safe_region = False
                         to_scout.append(neighbor)
 ###################ATTACK ADJACENT ARMIES###############################################
                 if target and target.armies * SAFETY_FACTOR < regions[region_id].armies:
@@ -145,6 +149,10 @@ class Bot(object):
                         outStr += (self.name + " attack/transfer " + region_id +
                                  " " +  to_scout[i].id + " " +str(to_send) + ",")
                         armies -= to_send
+                ##Relocate armies to regions in need
+                elif safe_region:
+                    pass
+
         if outStr == "":
             outStr += "No moves"
         print (outStr)

@@ -21,6 +21,11 @@ class Map(object):
             self.regions[region_id].add_neighbor(self.regions[neighbor])
             self.regions[neighbor].add_neighbor(self.regions[region_id])
 
+    def weight_super_regions(self):
+        for super_region in self.super_regions:
+            weight = len(super_region.children)
+            super_region.weighted_bonus = super_region.bonus/weight
+
     def shortest_path(self,region_from, region_to):
         #FIXME
         print ("TODO")
@@ -29,42 +34,45 @@ class Map(object):
         for region in self.regions:
             self.queue.append(region)
 
-#    def get_path(self,soruce,dest,path):
-#        #This will return list of id's for the regions
-#        #on the shortest path
-#        if source == dest:
-#            return
-#        elif dest.pi == None:
-#            print ("ERROR: No path exists",file=sys.stderr)
-#            return None
-#        else :
-#            path.append(dest.id)
-#            return get_path(self,source,dest.pi,path)
+    def get_path(self,source,dest,path):
+        #This will return list of id's for the regions
+        #on the shortest path
+        if source == dest:
+            return
+        elif dest.pi == None:
+            print ("ERROR: No path exists",file=sys.stderr)
+            return None
+        else :
+            path.append(dest.id)
+            return self.get_path(source,dest.pi,path)
 
-#    def BFS(self,source):
-#        source.color = 'GRAY'
-#        source.dis = 0
-#        source.pi = None
-#        queue = deque([self.regions[source]])
-#        while len(queue) != 0:
-#            u = queue.pop()
-#            self.clean_up_queue.append(u)
-#            for v in u.neighbors:
-#                if v.color == 'WHITE':
-#                    v.color = 'GRAY'
-#                    v.dis = u.dis + 1
-#                    v.pi = u
-#                    queue.appendLeft(v)
-#            #not really needed
-#            u.color = 'BLACK'
-#
-#
-#    def clean_up(self):
-#        for region in self.clean_up_queue:
-#            region.color = 'WHITE'
-#            region.dis = float('inf')
-#            region.pi = None
-#        self.clean_up_queue.clear()
+    def BFS(self,source,terminate_case):
+        source.color = 'GRAY'
+        source.dis = 0
+        source.pi = None
+        queue = deque([self.regions[source]])
+        while len(queue) != 0:
+            u = queue.pop()
+            self.clean_up_queue.append(u)
+            for v in u.neighbors:
+                if v.color == 'WHITE':
+                    v.color = 'GRAY'
+                    v.dis = u.dis + 1
+                    v.pi = u
+                    queue.appendLeft(v)
+                #if we found what we are looking for just exit
+                if terminate_case and terminate_case():
+                    return 
+            #not really needed
+            u.color = 'BLACK'
+
+
+    def clean_up(self):
+        for region in self.clean_up_queue:
+            region.color = 'WHITE'
+            region.dis = float('inf')
+            region.pi = None
+        self.clean_up_queue.clear()
 
     def update_region(self,region_id, occupant, armies):
         self.regions[region_id].occupant = occupant
