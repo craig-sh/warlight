@@ -1,3 +1,5 @@
+Update map with enemy moves, so we don't make stupid attacks
+
 If the current region borders an enemy and another friendly region borders taht enemy region too 
 and the current region's  army is less than the other friendly army, explore
 

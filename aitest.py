@@ -23,11 +23,11 @@ class Bot(object):
             if not super_region in count:
                 count[super_region] = 0
                 picks[super_region] = []
-            count[super_region] += 1 + super_region.bonus * 0.2
+            count[super_region] +=  super_region.bonus
             picks[super_region].append(region)
         outStr = ""
-        for w in sorted(count,key=count.get,reverse=True):
-            #print(w,count[w])
+        for w in sorted(count,key=count.get):
+            #print(w.id,count[w])
             for reg in picks[w]:
                 outStr += reg + " "
                 picks_left -= 1
