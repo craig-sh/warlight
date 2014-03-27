@@ -103,20 +103,25 @@ class Map(object):
 
     def get_placement_score(self,region,name,opponent_name):
         DEFENSE = 0.8
-        ATTACK = 1.25
+        ATTACK = 1.5
+        SCOUT = 0.2
         FILL_CONTINENTS = 3
         super_region = region.super_region
         score = 0
         for neighbor in region.neighbors:
             if neighbor.occupant == opponent_name:
-                if (neighbor.armies - region.armies)/neighbor.armies \
-                    > (1 - DEFENSE):
-                    score += neighbor.armies - region.armies
+                if neighbor.super_region == region.super_region and \
+                   region.super_region.remaining_regions <= 2 and \
+                   float(region.armies)/float(neighbor.armies) < ATTACK:
+                    score += float(neighbor.armies)/float(self.armies) * ATTACK
+                elif float(region.armies)/float(neighbor.armies) \
+                    < float(DEFENSE):
+                    score += float(neighbor.armies)/float(self.armies)
                 #elif (region.armies - neighbor.armies)/region.armies \
                 #   < (ATTACK):
                 #    score += 1
                 else:
-                    score += 0.7
+                    score += (float(neighbor.armies)/float(region.armies)) / 2.0
             elif neighbor.occupant == 'neutral':
                 if neighbor.super_region == region.super_region and \
                    region.super_region.remaining_regions <= 2:
@@ -124,9 +129,9 @@ class Map(object):
                                 - region.super_region.remaining_regions)/ \
                                 float(len(region.super_region.children))))
                 elif neighbor.super_region == region.super_region:
-                    score += 0.4
+                    score += 2*SCOUT
                 else:
-                    score += 0.2
+                    score += SCOUT
 
         return score
 
