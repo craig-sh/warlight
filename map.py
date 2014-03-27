@@ -102,10 +102,38 @@ class Map(object):
         return path
 
     def get_placement_score(self,region,name,opponent_name):
+        DEFENSE = 0.8
+        ATTACK = 1.25
+        FILL_CONTINENTS = 3
         super_region = region.super_region
+        score = 0
+        for neighbor in region.neighbors:
+            if neighbor.occupant == opponent_name:
+                if (neighbor.armies - region.armies)/neighbor.armies \
+                    > (1 - DEFENSE):
+                    score += neighbor.armies - region.armies
+                #elif (region.armies - neighbor.armies)/region.armies \
+                #   < (ATTACK):
+                #    score += 1
+                else:
+                    score += 0.7
+            elif neighbor.occupant == 'neutral':
+                if neighbor.super_region == region.super_region and \
+                   region.super_region.remaining_regions <= 2:
+                    score +=  float(FILL_CONTINENTS) * float(((len(region.super_region.children) \
+                                - region.super_region.remaining_regions)/ \
+                                float(len(region.super_region.children))))
+                elif neighbor.super_region == region.super_region:
+                    score += 0.4
+                else:
+                    score += 0.2
+
+        return score
+
+
         #Placement scores
         # 1. enemy beside you
-        # 2. Don't want to expand out of continent before capturing it 
+        # 2. Don't want to expand out of continent before capturing it
         # 3. Want to weight caputuring a continent before attacking an enemy
 
     def get_attacks(self,reigon):

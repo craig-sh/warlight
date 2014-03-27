@@ -4,7 +4,7 @@ class SuperRegion(object):
         self.bonus = int(bonus)
         self.weighted_bonus = 0
         self.children = []
-        self.remaing_regions = 1000
+        self.remaining_regions = 1000
     def add_child(self,child):
         #neighnor should be an object this will
         #be similar to an array of pointers?

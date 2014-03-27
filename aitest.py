@@ -54,15 +54,46 @@ class Bot(object):
         print (outStr)
 
     """
-    Place armies in regions that are connected
-    to enemy regions so that they have armies
-    equal to the number that the enemy does
-    then place the rest of the armies
-    in regions that have adjacent terrotories that
-    are free
-    FIXME :optimize loops so that we store our own locations
+    Calls the map function to 'score' each region
+    Keeps the top 6 and recalculates after each placement
     """
     def place_armies(self,armies):
+        ranks = {}
+        top_ranks = {}
+        outStr = ""
+
+        for region_id in self.map.visible_regions:
+            region = self.map.regions[region_id]
+            if region.occupant == self.name:
+                ranks[region] = self.map.get_placement_score(region,self.name,self.opponent_name)
+        #get the top 6 picks
+        count = 0
+        for region in sorted(ranks,key=ranks.get,reverse=True):
+            top_ranks[region] = ranks[region]
+            count += 1
+            if count >= 6:
+                break
+
+        while armies > 0:
+            for region in sorted(top_ranks,key=top_ranks.get,reverse=True):
+                outStr += self.name + " place_armies " + str(region.id)
+                outStr += " " + str(1) +","
+                region.armies += 1
+                break
+            #reevaluate
+            for region in top_ranks:
+                top_ranks[region] = self.map.get_placement_score(region,self.name,self.opponent_name)
+            armies -= 1
+
+        if outStr == "":
+            print ("ERROR: unplaced armies" , file=sys.stderr)
+            outStr += "No moves"
+        print (outStr)
+
+
+
+
+        """
         threat = {}
         armies_left = armies
         regions = self.map.regions
@@ -106,11 +137,7 @@ class Bot(object):
                 outStr += self.name + " place_armies " + str(region_id)
                 outStr += " " + str(armies) + ","
                 break
-
-        if outStr == "":
-            print ("ERROR: unplaced armies" , file=sys.stderr)
-            outStr += "No moves"
-        print (outStr)
+        """
     """
         #Scan through all visible regions belonging to us
         #Attack the neighbor with the highest amount of enemy units
