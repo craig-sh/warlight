@@ -1,3 +1,5 @@
+When the enemy controls the last territory in a continent weight it more so that we take them out
+
 Update map with enemy moves, so we don't make stupid attacks
 
 If the current region borders an enemy and another friendly region borders taht enemy region too 
