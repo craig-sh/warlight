@@ -101,8 +101,15 @@ class Map(object):
         self.clean_up()
         return path
 
+    def get_placement_score(self,region,name,opponent_name):
+        super_region = region.super_region
+        #Placement scores
+        # 1. enemy beside you
+        # 2. Don't want to expand out of continent before capturing it 
+        # 3. Want to weight caputuring a continent before attacking an enemy
 
-
+    def get_attacks(self,reigon):
+        pass
 
 
 

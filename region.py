@@ -4,6 +4,7 @@ class SuperRegion(object):
         self.bonus = int(bonus)
         self.weighted_bonus = 0
         self.children = []
+        self.remaing_regions = 1000
     def add_child(self,child):
         #neighnor should be an object this will
         #be similar to an array of pointers?
@@ -16,6 +17,7 @@ class Region(object):
         self.neighbors = []
         self.occupant = 'neutral'
         self.armies = 0
+        self.last_army = 0
         self.color = 'WHITE'
         self.dis = float('inf')
         self.pi = None

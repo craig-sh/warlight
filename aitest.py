@@ -10,6 +10,18 @@ class Bot(object):
         self.opponent_name = ""
 
     """
+    Updates each super region with the number of remaining
+    regions in them that are left to capture
+    """
+    def update_super_regions(self):
+        for super_region in self.map.super_regions.values():
+            super_region.remaining_regions = 0
+            for region in super_region.children:
+                if region.occupant != self.name:
+                    super_region.remaining_regions += 1
+
+
+    """
     Tries and group picks into the same super region
     Consider evaluating the distances between all picks as well
     """
@@ -42,12 +54,12 @@ class Bot(object):
         print (outStr)
 
     """
-    #Place armies in regions that are connected
-    #to enemy regions so that they have armies
-    #equal to the number that the enemy does
-    #then place the rest of the armies
-    #in regions that have adjacent terrotories that
-    #are free
+    Place armies in regions that are connected
+    to enemy regions so that they have armies
+    equal to the number that the enemy does
+    then place the rest of the armies
+    in regions that have adjacent terrotories that
+    are free
     FIXME :optimize loops so that we store our own locations
     """
     def place_armies(self,armies):
@@ -189,6 +201,7 @@ class Bot(object):
             for i in range(1,len(cmd),3):
                 self.map.visible_regions.append(cmd[i])
                 self.map.update_region(cmd[i],cmd[i+1],cmd[i+2])
+            self.update_super_regions()
 
         elif len(cmd) == 3 and cmd[0] == 'go':
             if cmd[1] == 'place_armies':
