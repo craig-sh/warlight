@@ -45,7 +45,7 @@ class Map(object):
         #on the shortest path
 
         if dest == None or dest.pi == None:
-            print ("ERROR: No path exists",file=sys.stderr)
+            #print ("ERROR: No path exists",file=sys.stderr)
             return None
         if source == dest:
             path.append(source.id)
@@ -95,53 +95,69 @@ class Map(object):
 
     def closest_unowned_region(self,region):
         path = []
-        dest = self.BFS(region,lambda x:x.occupant != region.occupant)
+        dest = self.BFS(region,lambda x:x.occupant != region.occupant and x.occupant != 'neutral')
         self.get_path(region,dest,path)
         print ("Path:",path,file=sys.stderr)
         self.clean_up()
         return path
 
     def get_placement_score(self,region,name,opponent_name):
-        DEFENSE = 0.8
+        DEFENSE = 0.9
         ATTACK = 1.5
         SCOUT = 0.2
         FILL_CONTINENTS = 3
+        MINIMUM_SCOUT_FORCE = 5
         super_region = region.super_region
+        threat = {}
         score = 0
         for neighbor in region.neighbors:
             if neighbor.occupant == opponent_name:
                 if neighbor.super_region == region.super_region and \
-                   region.super_region.remaining_regions <= 2 and \
-                   float(region.armies)/float(neighbor.armies) < ATTACK:
-                    score += float(neighbor.armies)/float(self.armies) * ATTACK
+                   region.super_region.remaining_regions <= 2:
+                    if neighbor.strongest(name) == region:
+                        score += 2.0
+                        #float(neighbor.armies)/float(region.armies) *2* ATTACK
+                    #elif float(region.armies)/float(neighbor.armies) < ATTACK:
+                    #    pass
                 elif float(region.armies)/float(neighbor.armies) \
                     < float(DEFENSE):
-                    score += float(neighbor.armies)/float(self.armies)
+                    if(neighbor.strongest(name) == region):
+                        score += 1.0
+                    #float(neighbor.armies)/float(region.armies)
+                    #else:
+                    #    pass
+
                 #elif (region.armies - neighbor.armies)/region.armies \
                 #   < (ATTACK):
                 #    score += 1
                 else:
-                    score += (float(neighbor.armies)/float(region.armies)) / 2.0
+                    score += 0.5
+                    #(float(neighbor.armies)/float(region.armies)) / 2.0
             elif neighbor.occupant == 'neutral':
                 if neighbor.super_region == region.super_region and \
-                   region.super_region.remaining_regions <= 2:
-                    score +=  float(FILL_CONTINENTS) * float(((len(region.super_region.children) \
-                                - region.super_region.remaining_regions)/ \
-                                float(len(region.super_region.children))))
-                elif neighbor.super_region == region.super_region:
-                    score += 2*SCOUT
-                else:
-                    score += SCOUT
+                   region.super_region.remaining_regions <= 2 and \
+                   region.armies < MINIMUM_SCOUT_FORCE:
+                    if neighbor.strongest(name) == region:
+                        score +=  1.5
+                        #float(FILL_CONTINENTS) * float(((len(region.super_region.children) \
+                        #        - region.super_region.remaining_regions)/ \
+                        #        float(len(region.super_region.children))))
+                elif region.armies < MINIMUM_SCOUT_FORCE:
+                    if neighbor.super_region == region.super_region:
+                        if neighbor.strongest(name) == region and neighbor.strongest(name).armies < MINIMUM_SCOUT_FORCE:
+                            score += 0.75
+                            #score += 2*SCOUT + 0.25*region.armies
+                    else:
+                        score +=  0.25
 
         return score
-
 
         #Placement scores
         # 1. enemy beside you
         # 2. Don't want to expand out of continent before capturing it
         # 3. Want to weight caputuring a continent before attacking an enemy
 
-    def get_attacks(self,reigon):
+    def get_attack_score(self,reigon,name,opponent_name):
         pass
 
 

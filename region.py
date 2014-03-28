@@ -28,4 +28,12 @@ class Region(object):
         #neighnor should be an object this will
         #be similar to an array of pointers?
         self.neighbors.append(neighbor)
+    def strongest(self,name):
+        highest = None
+        for neighbor in self.neighbors:
+            if neighbor.occupant == name:
+                if ( highest == None) or (highest.armies < neighbor.armies):
+                    highest = neighbor
+        return highest 
+
 

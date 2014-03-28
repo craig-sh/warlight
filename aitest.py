@@ -81,8 +81,8 @@ class Bot(object):
                 region.armies += 1
                 break
             #reevaluate
-            for region in top_ranks:
-                top_ranks[region] = self.map.get_placement_score(region,self.name,self.opponent_name)
+            #for region in top_ranks:
+            #    top_ranks[region] = self.map.get_placement_score(region,self.name,self.opponent_name)
             armies -= 1
 
         if outStr == "":
@@ -181,7 +181,7 @@ class Bot(object):
                     #Send two armies to each region and the remaining to the last unscouted region
                     #This will leave only one army in the current region
                     for i in range(len(to_scout)):
-                        if armies <= SCOUT_FORCE:
+                        if armies  <= SCOUT_FORCE :
                             break
                         if i == (len(to_scout) - 1):
                             to_send = armies - 1
