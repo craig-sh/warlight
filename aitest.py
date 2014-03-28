@@ -151,7 +151,7 @@ class Bot(object):
         regions = self.map.regions
         outStr = ""
         SAFETY_FACTOR = 1.5
-        SCOUT_FORCE = 3
+        SCOUT_FORCE = 4
         for region_id in self.map.visible_regions:
             if regions[region_id].occupant ==  self.name:
                 target = None

@@ -137,8 +137,17 @@ class Map(object):
         # 2. Don't want to expand out of continent before capturing it
         # 3. Want to weight caputuring a continent before attacking an enemy
 
-    def get_attacks(self,reigon):
-        pass
+    def get_attacks(self,reigon,name,opponent_name):
+        moves = {}
+        SAFETY_NET = 2.33 
+        for neighbor in region.neighbors:
+            if neighbor.occupant == opponent_name:
+                if float(region.armies)/float(neighbor.armies) < SAFETY_NET:
+                    if neighbor.total_adversaries(name) > neighbor.armies * SAFETY_NET:
+                        moves{neighbor} = region.armies
+                else:
+                    if region.super_region == neighbor.super_region:
+                        moves{neighbor} = float(self.armies )* SAFETY_NET
 
 
 
