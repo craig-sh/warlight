@@ -148,83 +148,87 @@ class Bot(object):
         access our own stored locations
     """
     def attack(self):
-        HIGH_NUM = 1000
-        outStr = ""
-        attacked = False
-        SCOUT_FORCE = 5
         regions = self.map.regions
+        SAFETY_FACTOR = 1.5
+        SCOUT_FORCE = 4
+        CONTINENT_WEIGHT = 100
+        threat = {}
+        attacks = {}
+        outStr = ""
         for region_id in self.map.visible_regions:
-            if regions[region_id].occupant == self.name:
-                moves = self.map.get_attacks(regions[region_id],self.name,self.opponent_name)
-                armies = regions[region_id].armies
-                for neighbor in sorted(moves,key=moves.get,reverse=True):
-                    units = moves[neighbor]
-                    units = units - 1*(regions[region_id].same_super(neighbor))
+            if regions[region_id].occupant ==  self.name:
+                region = regions[region_id]
+                threat[region] = 0
+                enemy = None
+                to_scout = []
+                close_targets = []
+                targets = []
+                safe= True
+                for neighbor in region.neighbors:
+                    if neighbor.occupant == self.opponent_name:                          
+                        threat[region] += int(neighbor.armies)
+                for neighbor in region.neighbors:
                     if neighbor.occupant == self.opponent_name:
-                        units = units - HIGH_NUM
-                    outStr += (self.name + " attack/transfer " + region_id + " "
-                                + neighbor.id + " " +  str(int(units))+ ",")
-                    attacked = True
-                    armies = armies - units
+                        enemy = True
+                        safe = False
+                        if (neighbor.super_region.is_owned(self.name)):
+                            close_targets.append(neighbor)
+                        else:
+                            targets.append(neighbor)
+                    elif neighbor.occupant == 'neutral':
+                        safe = False
+                        to_scout.append(neighbor)
 
-                    if armies <= 1:
-                        break
-                if not attacked and armies >= SCOUT_FORCE:
-                    path = self.map.closest_unowned_region(regions[region_id])
+                targets = sorted(targets,key=lambda target:target.armies)
+                close_targets = sorted(close_targets,key=lambda target:target.armies)
+                final_target = None
+                if(enemy and threat[region] < region.armies):
+                    if close_targets:
+                        final_target = close_targets[0]
+                    else:
+                        final_target = targets[0]
+                    if float(final_target.armies) * SAFETY_FACTOR < region.armies:
+                        outStr += (self.name + " attack/transfer " + region.id + " "
+                            + final_target.id + " " +  str(region.armies - 1)+ ",")
+                elif (enemy):
+                    for targ in close_targets:
+                        units = float(region.armies) - (float(targ.armies) *SAFETY_FACTOR)
+                        if (units)  > (float(threat[region])/SAFETY_FACTOR):
+                            outStr += (self.name + " attack/transfer " + region.id + " "
+                            + targ.id + " " +  str(int(units) - 1)+ ",")
+                            break
+                elif (not safe):
+                    armies = region.armies
+                    if armies <= SCOUT_FORCE and armies > 1:
+                        reinforce = None
+                        reinforce = region.strongest(self.name,lambda x:x.super_region==region.super_region)
+                        if not reinforce:
+                            reinforce = region.strongest(self.name,lambda x:x.super_region==region.super_region)
+                        if reinforce:
+                            reinforce.armies += armies-1
+                            outStr += (self.name + " attack/transfer " + region.id +
+                             " " +  reinforce.id + " " +str(armies-1) + ",")
+                    else:
+                        scout = sorted(to_scout,key=lambda x: int(x.super_region == region.super_region),reverse=True)
+                        to_send = 0
+                        for i in range(len(scout)):
+                            if armies < SCOUT_FORCE:
+                                break
+                            if i == (len(scout) - 1):
+                                to_send = armies - 1
+                            else:
+                                to_send = SCOUT_FORCE
+                            outStr += (self.name + " attack/transfer " + region_id +
+                                     " " +  scout[i].id + " " +str(to_send) + ",")
+                            armies -= to_send
+                ##Relocate armies to regions in need
+                elif safe and region.armies > 1:
+                    path = self.map.closest_unowned_region(region)
                     outStr += (self.name + " attack/transfer " + region_id + " "
-                                + str(path[-1]) + " " +  str(regions[region_id].armies - 1)+ ",")
+                            + str(path[-1]) + " " +  str(region.armies - 1)+ ",")
         if outStr == "":
             outStr += "No moves"
         print (outStr)
-
-
-        """
-            regions = self.map.regions
-            SAFETY_FACTOR = 1.5
-            SCOUT_FORCE = 4
-            if regions[region_id].occupant ==  self.name:
-                target = None
-                to_scout = []
-                safe_region = True
-                for neighbor in regions[region_id].neighbors:
-                    if neighbor.occupant == self.opponent_name:
-                        safe_region = False
-                        if target == None or neighbor.armies > target.armies:
-                            target = neighbor
-                    elif neighbor.occupant == 'neutral':
-                        safe_region = False
-                        to_scout.append(neighbor)
-###################ATTACK ADJACENT ARMIES###############################################
-                if target and target.armies * SAFETY_FACTOR < regions[region_id].armies:
-                    outStr += (self.name + " attack/transfer " + region_id + " "
-                            + target.id + " " +  str(regions[region_id].armies - 1)+ ",")
-##########################################################################################
-            #FIXME- if we have a region that is surrounded by friendly regions
-            #       we need to send all the armies from that regions to reinforce
-            #       the closest region in danger
-##########################SCOUTING###############################################
-                elif target == None and len(to_scout):
-                    armies = regions[region_id].armies
-                    scout = sorted(to_scout,key=lambda x: int(x.super_region == regions[region_id].super_region),reverse=True)
-                    #Send two armies to each region and the remaining to the last unscouted region
-                    #This will leave only one army in the current region
-                    for i in range(len(to_scout)):
-                        if armies <= SCOUT_FORCE:
-                            break
-                        if i == (len(scout) - 1):
-                            to_send = armies - 1
-                        else:
-                            to_send = SCOUT_FORCE
-                        outStr += (self.name + " attack/transfer " + region_id +
-                                 " " +  scout[i].id + " " +str(to_send) + ",")
-                        armies -= to_send
-                ##Relocate armies to regions in need
-                elif safe_region and regions[region_id].armies > 1:
-                    path = self.map.closest_unowned_region(regions[region_id])
-                    outStr += (self.name + " attack/transfer " + region_id + " "
-                            + str(path[-1]) + " " +  str(regions[region_id].armies - 1)+ ",")
-        """
-
 
     def process_input(self,cmd):
         if cmd[0] == 'settings':

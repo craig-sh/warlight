@@ -143,7 +143,7 @@ class Map(object):
     def get_attacks(self,region,name,opponent_name):
         moves = {}
         SAFETY_NET = 2.33
-        SCOUT_FORCE = 5
+        SCOUT_FORCE = 4
         RISKY_SCOUT = False
         HIGH_NUM = 1000
         armies = region.armies - 1
