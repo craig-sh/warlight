@@ -32,3 +32,18 @@ class Region(object):
     def same_super(self,neighbor):
         return self.super_region == neighbor.super_region
 
+    def strongest(self,name):
+        highest = None
+        for neighbor in self.neighbors:
+            if neighbor.occupant == name:
+                if ( highest == None) or (highest.armies < neighbor.armies):
+                    highest = neighbor
+        return highest
+
+    def total_adversaries(self,name):
+        armies = 0
+        for neighbor in self.neighbors:
+            if neighbor.occupant == name:
+                armies += neighbor.armies
+        return armies
+

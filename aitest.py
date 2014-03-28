@@ -148,11 +148,40 @@ class Bot(object):
         access our own stored locations
     """
     def attack(self):
-        regions = self.map.regions
+        HIGH_NUM = 1000
         outStr = ""
-        SAFETY_FACTOR = 1.5
-        SCOUT_FORCE = 4
+        attacked = False
+        SCOUT_FORCE = 5
+        regions = self.map.regions
         for region_id in self.map.visible_regions:
+            if regions[region_id].occupant == self.name:
+                moves = self.map.get_attacks(regions[region_id],self.name,self.opponent_name)
+                armies = regions[region_id].armies
+                for neighbor in sorted(moves,key=moves.get,reverse=True):
+                    units = moves[neighbor]
+                    units = units - 1*(regions[region_id].same_super(neighbor))
+                    if neighbor.occupant == self.opponent_name:
+                        units = units - HIGH_NUM
+                    outStr += (self.name + " attack/transfer " + region_id + " "
+                                + neighbor.id + " " +  str(int(units))+ ",")
+                    attacked = True
+                    armies = armies - units
+
+                    if armies <= 1:
+                        break
+                if not attacked and armies >= SCOUT_FORCE:
+                    path = self.map.closest_unowned_region(regions[region_id])
+                    outStr += (self.name + " attack/transfer " + region_id + " "
+                                + str(path[-1]) + " " +  str(regions[region_id].armies - 1)+ ",")
+        if outStr == "":
+            outStr += "No moves"
+        print (outStr)
+
+
+        """
+            regions = self.map.regions
+            SAFETY_FACTOR = 1.5
+            SCOUT_FORCE = 4
             if regions[region_id].occupant ==  self.name:
                 target = None
                 to_scout = []
@@ -194,10 +223,8 @@ class Bot(object):
                     path = self.map.closest_unowned_region(regions[region_id])
                     outStr += (self.name + " attack/transfer " + region_id + " "
                             + str(path[-1]) + " " +  str(regions[region_id].armies - 1)+ ",")
+        """
 
-        if outStr == "":
-            outStr += "No moves"
-        print (outStr)
 
     def process_input(self,cmd):
         if cmd[0] == 'settings':
@@ -236,6 +263,13 @@ class Bot(object):
                 self.place_armies(self.start_armies)
             elif cmd[1] == "attack/transfer":
                 self.attack()
+        elif cmd[0] == 'opponent_moves':
+            #we ignore enemy attacks on our own regions
+            #for i in range(1,len(cmd),3):
+            #    self.update_moves(cmd[i],cmd[i+1])
+            #FIXME TODO
+            pass
+
         stdout.flush()
 
 

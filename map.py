@@ -122,7 +122,9 @@ class Map(object):
             elif neighbor.occupant == 'neutral':
                 if neighbor.super_region == region.super_region and \
                    region.super_region.remaining_regions <= 2:
-                    score +=  float(FILL_CONTINENTS) * float(((len(region.super_region.children) \
+                   if neighbor.strongest(name) == region and \
+                      region.armies < 5:
+                        score +=  float(FILL_CONTINENTS) * float(((len(region.super_region.children) \
                                 - region.super_region.remaining_regions)/ \
                                 float(len(region.super_region.children))))
                 elif neighbor.super_region == region.super_region:
@@ -141,17 +143,26 @@ class Map(object):
     def get_attacks(self,region,name,opponent_name):
         moves = {}
         SAFETY_NET = 2.33
-        SCOUT_FORCE = 4
+        SCOUT_FORCE = 5
+        RISKY_SCOUT = False
+        HIGH_NUM = 1000
+        armies = region.armies - 1
+        safe = True
         for neighbor in region.neighbors:
             if neighbor.occupant == opponent_name:
-                if float(region.armies)/float(neighbor.armies) < SAFETY_NET:
-                    if neighbor.total_adversaries(name) > neighbor.armies * SAFETY_NET:
-                        moves[neighbor] = region.armies 
+                safe = False
+                if float(armies)/float(neighbor.armies) < SAFETY_NET:
+                    if neighbor.total_adversaries(name) > float(neighbor.armies) * SAFETY_NET:
+                        moves[neighbor] = armies + 1*int(region.same_super(neighbor)) + HIGH_NUM
                 else:
-                    moves[neighbor] = float(self.armies )* SAFETY_NET + 1*int(region.same_super(neighbor))
-            elif neighbor.occupant == 'neutral':
-                if region.total_adversaries(opponent_name) < region.armies - * SAFETY_NET/2.0:
-                    pass
+                    moves[neighbor] = float(armies) + 1*int(region.same_super(neighbor)) + HIGH_NUM
+        if safe:
+            for neighbor in region.neighbors:
+                if neighbor.occupant == 'neutral':
+                    if armies >= SCOUT_FORCE:
+                        moves[neighbor] = SCOUT_FORCE  + 1* int(region.same_super(neighbor))
+        return moves
+
 
 
 
