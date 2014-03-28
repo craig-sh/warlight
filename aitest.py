@@ -176,6 +176,8 @@ class Bot(object):
 ##########################SCOUTING###############################################
                 elif target == None and len(to_scout):
                     armies = regions[region_id].armies
+                    sorted(to_scout,key=lambda neighbor: neighbor.super_region \
+                        == regions[region_id].super_region,reverse=True)
                     #Send two armies to each region and the remaining to the last unscouted region
                     #This will leave only one army in the current region
                     for i in range(len(to_scout)):

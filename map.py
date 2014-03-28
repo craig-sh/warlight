@@ -45,7 +45,7 @@ class Map(object):
         #on the shortest path
 
         if dest == None or dest.pi == None:
-            print ("ERROR: No path exists",file=sys.stderr)
+            #print ("ERROR: No path exists",file=sys.stderr)
             return None
         if source == dest:
             path.append(source.id)
@@ -97,7 +97,7 @@ class Map(object):
         path = []
         dest = self.BFS(region,lambda x:x.occupant != region.occupant)
         self.get_path(region,dest,path)
-        print ("Path:",path,file=sys.stderr)
+        #print ("Path:",path,file=sys.stderr)
         self.clean_up()
         return path
 
@@ -111,6 +111,7 @@ class Map(object):
             if neighbor.occupant == opponent_name:
                 if (neighbor.armies - region.armies)/neighbor.armies \
                     > (1 - DEFENSE):
+                    print ("LOLs",file=sys.stderr)
                     score += neighbor.armies - region.armies
                 #elif (region.armies - neighbor.armies)/region.armies \
                 #   < (ATTACK):
