@@ -176,19 +176,18 @@ class Bot(object):
 ##########################SCOUTING###############################################
                 elif target == None and len(to_scout):
                     armies = regions[region_id].armies
-                    sorted(to_scout,key=lambda neighbor: neighbor.super_region \
-                        == regions[region_id].super_region,reverse=True)
+                    scout = sorted(to_scout,key=lambda x: int(x.super_region == regions[region_id].super_region),reverse=True)
                     #Send two armies to each region and the remaining to the last unscouted region
                     #This will leave only one army in the current region
                     for i in range(len(to_scout)):
                         if armies <= SCOUT_FORCE:
                             break
-                        if i == (len(to_scout) - 1):
+                        if i == (len(scout) - 1):
                             to_send = armies - 1
                         else:
                             to_send = SCOUT_FORCE
                         outStr += (self.name + " attack/transfer " + region_id +
-                                 " " +  to_scout[i].id + " " +str(to_send) + ",")
+                                 " " +  scout[i].id + " " +str(to_send) + ",")
                         armies -= to_send
                 ##Relocate armies to regions in need
                 elif safe_region and regions[region_id].armies > 1:

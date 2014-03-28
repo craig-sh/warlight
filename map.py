@@ -117,6 +117,7 @@ class Map(object):
                 #   < (ATTACK):
                 #    score += 1
                 else:
+                    #score += float(neighbor.armies)/float(region.armies)
                     score += 0.7
             elif neighbor.occupant == 'neutral':
                 if neighbor.super_region == region.super_region and \
@@ -137,17 +138,25 @@ class Map(object):
         # 2. Don't want to expand out of continent before capturing it
         # 3. Want to weight caputuring a continent before attacking an enemy
 
-    def get_attacks(self,reigon,name,opponent_name):
+    def get_attacks(self,region,name,opponent_name):
         moves = {}
-        SAFETY_NET = 2.33 
+        SAFETY_NET = 2.33
+        SCOUT_FORCE = 4
         for neighbor in region.neighbors:
             if neighbor.occupant == opponent_name:
                 if float(region.armies)/float(neighbor.armies) < SAFETY_NET:
                     if neighbor.total_adversaries(name) > neighbor.armies * SAFETY_NET:
-                        moves{neighbor} = region.armies
+                        moves[neighbor] = region.armies 
                 else:
-                    if region.super_region == neighbor.super_region:
-                        moves{neighbor} = float(self.armies )* SAFETY_NET
+                    moves[neighbor] = float(self.armies )* SAFETY_NET + 1*int(region.same_super(neighbor))
+            elif neighbor.occupant == 'neutral':
+                if region.total_adversaries(opponent_name) < region.armies - * SAFETY_NET/2.0:
+                    pass
+
+
+
+
+
 
 
 

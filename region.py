@@ -29,3 +29,6 @@ class Region(object):
         #be similar to an array of pointers?
         self.neighbors.append(neighbor)
 
+    def same_super(self,neighbor):
+        return self.super_region == neighbor.super_region
+
