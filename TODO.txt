@@ -1,3 +1,1 @@
-1. Split attacking force when we have a much larger force.
-2. Currently reindorce algoritm aitest.py:202 is dumb. Call get_placement_score to get consistent reinforcing
-3. Have to tweak placement values
+1. Need to account for tradeoff between attacking netruals and reinforcing friends.Don't always just scout
