@@ -1,8 +1,3 @@
-Update map with enemy moves, so we don't make stupid attacks
-
-If the current region borders an enemy and another friendly region borders taht enemy region too 
-and the current region's  army is less than the other friendly army, explore
-
-Bot always moves entire army currently. Some situations may require it not to.
-
-Bot always reinforces regions that are in danger of being taken over by enemies. Results in stalemates.
+1. Split attacking force when we have a much larger force.
+2. Currently reindorce algoritm aitest.py:202 is dumb. Call get_placement_score to get consistent reinforcing
+3. Have to tweak placement values

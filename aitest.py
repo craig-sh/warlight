@@ -152,6 +152,7 @@ class Bot(object):
         SAFETY_FACTOR = 1.5
         SCOUT_FORCE = 4
         CONTINENT_WEIGHT = 100
+        DIVIDING_FACTOR = 1.5
         threat = {}
         attacks = {}
         outStr = ""
@@ -165,7 +166,7 @@ class Bot(object):
                 targets = []
                 safe= True
                 for neighbor in region.neighbors:
-                    if neighbor.occupant == self.opponent_name:                          
+                    if neighbor.occupant == self.opponent_name:
                         threat[region] += int(neighbor.armies)
                 for neighbor in region.neighbors:
                     if neighbor.occupant == self.opponent_name:
@@ -179,35 +180,53 @@ class Bot(object):
                         safe = False
                         to_scout.append(neighbor)
 
-                targets = sorted(targets,key=lambda target:target.armies)
-                close_targets = sorted(close_targets,key=lambda target:target.armies)
+                targets = sorted(targets,key=lambda target:target.armies,reverse=True)
+                close_targets = sorted(close_targets,key=lambda target:target.armies,reverse=True)
                 final_target = None
                 if(enemy and threat[region] < region.armies):
-                    if close_targets:
-                        final_target = close_targets[0]
-                    else:
-                        final_target = targets[0]
-                    if float(final_target.armies) * SAFETY_FACTOR < region.armies:
-                        outStr += (self.name + " attack/transfer " + region.id + " "
-                            + final_target.id + " " +  str(region.armies - 1)+ ",")
-                elif (enemy):
-                    for targ in close_targets:
-                        units = float(region.armies) - (float(targ.armies) *SAFETY_FACTOR)
-                        if (units)  > (float(threat[region])/SAFETY_FACTOR):
+                    final_targets = close_targets + targets
+                    armies = region.armies
+                    for final_target in final_targets:
+                        strength = float(final_target.armies) * SAFETY_FACTOR * DIVIDING_FACTOR
+                        if  strength < armies:
                             outStr += (self.name + " attack/transfer " + region.id + " "
-                            + targ.id + " " +  str(int(units) - 1)+ ",")
+                                + final_target.id + " " +  str(int(strength) + 1)+ ",")
+                            armies -= int(strength) +1
+                        else:
                             break
+                elif (enemy):
+                    targets = targets + close_targets
+                    targets = sorted(targets,key=lambda target:target.armies,reverse=True)
+                    for targ in targets:
+                        strength = targ.total_adversaries(self.name)
+                        units = float(strength) - (float(targ.armies) *SAFETY_FACTOR)
+                        if (units)  > (SCOUT_FORCE):
+                            outStr += (self.name + " attack/transfer " + region.id + " "
+                            + targ.id + " " +  str(int(region.armies) - 1)+ ",")
+                        break
+
                 elif (not safe):
                     armies = region.armies
                     if armies <= SCOUT_FORCE and armies > 1:
                         reinforce = None
-                        reinforce = region.strongest(self.name,lambda x:x.super_region==region.super_region)
-                        if not reinforce:
-                            reinforce = region.strongest(self.name,lambda x:x.super_region==region.super_region)
-                        if reinforce:
-                            reinforce.armies += armies-1
-                            outStr += (self.name + " attack/transfer " + region.id +
-                             " " +  reinforce.id + " " +str(armies-1) + ",")
+                        scores = {}
+                        for neighbor in region.neighbors:
+                            if neighbor.occupant == self.name:
+                                scores[neighbor] = self.map.get_placement_score(neighbor,self.name,self.opponent_name)
+                        scores[region] = self.map.get_placement_score(region,self.name,self.opponent_name)
+                        for reg in sorted(scores,key=scores.get,reverse=True):
+                            if region ==  reg:
+                                break
+                            else:
+                                reg.armies += armies-1
+                                outStr += (self.name + " attack/transfer " + region.id +
+                                " " +  reg.id + " " +str(armies-1) + ",")
+                                break
+                        #reinforce = region.strongest(self.name,lambda x:x.super_region==region.super_region)
+                        #if not reinforce:
+                        #    reinforce = region.strongest(self.name,lambda x:x.super_region==region.super_region)
+                        #if reinforce:
+
                     else:
                         scout = sorted(to_scout,key=lambda x: int(x.super_region == region.super_region),reverse=True)
                         to_send = 0
@@ -269,10 +288,29 @@ class Bot(object):
                 self.attack()
         elif cmd[0] == 'opponent_moves':
             #we ignore enemy attacks on our own regions
+            i = 1
+            while i < len(cmd):
+                name = cmd[i]
+                move = cmd[i+1]
+                i += 2
+                if move == 'place_armies':
+                    reg = cmd[i]
+                    arms = int(cmd[i+1])
+                    i += 2
+                    self.map.regions[reg].armies += arms
+                elif move == 'attack/transfer':
+                    reg = cmd[i]
+                    to_reg = cmd[i+1]
+                    arms = int(cmd[i+2])
+                    i += 3
+                    self.map.regions[reg].armies -= arms
+                    self.map.regions[to_reg].armies -= arms
+
+
             #for i in range(1,len(cmd),3):
             #    self.update_moves(cmd[i],cmd[i+1])
             #FIXME TODO
-            pass
+            #pass
 
         stdout.flush()
 

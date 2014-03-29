@@ -101,7 +101,7 @@ class Map(object):
         self.clean_up()
         return path
 
-    def get_placement_score(self,region,name,opponent_name):
+    def get_placement_score(self,region,name,opponent_name,last_move=0):
         DEFENSE = 0.8
         ATTACK = 1.25
         FILL_CONTINENTS = 3
@@ -109,16 +109,10 @@ class Map(object):
         score = 0
         for neighbor in region.neighbors:
             if neighbor.occupant == opponent_name:
-                if (neighbor.armies - region.armies)/neighbor.armies \
-                    > (1 - DEFENSE):
-                    print ("LOLs",file=sys.stderr)
-                    score += neighbor.armies - region.armies
-                #elif (region.armies - neighbor.armies)/region.armies \
-                #   < (ATTACK):
-                #    score += 1
-                else:
-                    #score += float(neighbor.armies)/float(region.armies)
-                    score += 0.7
+                score += 0.7
+                #print ("LOLs",file=sys.stderr)
+                #score += (float(neighbor.armies)/float(region.armies)) * 0.1 + 0.2 * 1* int(region.same_super(neighbor))
+                
             elif neighbor.occupant == 'neutral':
                 if neighbor.super_region == region.super_region and \
                    region.super_region.remaining_regions <= 2:

@@ -52,7 +52,7 @@ class Region(object):
                         highest = neighbor
         return highest
 
-    def total_adversaries(self,name,condition):
+    def total_adversaries(self,name):
         armies = 0
         for neighbor in self.neighbors:
             if neighbor.occupant == name:
