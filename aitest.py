@@ -12,6 +12,51 @@ class Bot(object):
         self.start_armies = 0
         self.opponent_name = ""
         self.last_move = 0
+        self.round = 0
+        self.region_strings =   [
+                                    "Alaska",
+                                    "Northwest Territory",
+                                    "Greenland",
+                                    "Alberta",
+                                    "Ontario",
+                                    "Quebec",
+                                    "Western United States",
+                                    "Eastern United States",
+                                    "Central America",
+                                    "Venezuela",
+                                    "Peru",
+                                    "Brazil",
+                                    "Argentina",
+                                    "Iceland",
+                                    "Great Britain",
+                                    "Scandinavia",
+                                    "Ukraine",
+                                    "Western Europe",
+                                    "Northern Europe",
+                                    "Southern Europe",
+                                    "North Africa",
+                                    "Egypt",
+                                    "East Africa",
+                                    "Congo",
+                                    "South Africa",
+                                    "Madagascar",
+                                    "Ural",
+                                    "Siberia",
+                                    "Yakutsk",
+                                    "Kamchatka",
+                                    "Irkutsk",
+                                    "Kazakhstan",
+                                    "China",
+                                    "Mongolia",
+                                    "Japan",
+                                    "Middle East",
+                                    "India",
+                                    "Siam",
+                                    "Indonesia",
+                                    "New Guinea",
+                                    "Western Australia",
+                                    "Eastern Australia"
+                                ]
 
     """
     Updates each super region with the number of remaining
@@ -58,6 +103,12 @@ class Bot(object):
             break
         print(outStr)
 
+
+    def debug_placments(self,ranks):
+        print ("=================Round:"+str(self.round) + "=====================",file=sys.stderr)
+        for region in ranks.keys():            
+            print (self.region_strings[int(region.id)-1] ,ranks[region],file=sys.stderr)
+
     """
     Calls the map function to 'score' each region
     Keeps the top 6 and recalculates after each placement
@@ -67,7 +118,7 @@ class Bot(object):
         ranks = {}
         top_ranks = {}
         outStr = ""
-
+        self.round += 1
         for region_id in self.map.visible_regions:
             region = self.map.regions[region_id]
             if region.occupant == self.name:
@@ -80,7 +131,7 @@ class Bot(object):
             count += 1
             if count >= 6:
                 break
-
+        self.debug_placments(top_ranks)
         while armies > 0:
             for region in sorted(top_ranks, key=top_ranks.get, reverse=True):
                 outStr += self.name + " place_armies " + str(region.id)
@@ -113,6 +164,7 @@ class Bot(object):
         SCOUT_FORCE = 4
         threat = {}
         outStr = ""
+        attacked = False
         for region_id in self.map.visible_regions:
             region = regions[region_id]
             if region.armies <= 1:
@@ -150,7 +202,8 @@ class Bot(object):
                        outStr += (self.name + " attack/transfer " + region.id + " "
                        + final_targets[0].id + " " +  str(region.armies - 1)+ ",")
                     region.armies = 1
-
+                    attacked = True
+#FIXME ----Needs reviewing
                 elif (enemy):
                     targets =  close_targets + targets
                     targets = sorted(
@@ -162,6 +215,7 @@ class Bot(object):
                             outStr += (self.name + " attack/transfer " +
                                        region.id + " " + targ.id + " " +
                                        str(int(region.armies) - 1) + ",")
+                        attacked = True    
                         break
 
                 elif (not safe):
@@ -214,6 +268,7 @@ class Bot(object):
                                        region_id + " " + scout[i].id +
                                        " " + str(to_send) + ",")
                             armies -= to_send
+                            attacked = True
                             break
                 # Relocate armies to regions in need
                 elif safe:
@@ -222,9 +277,12 @@ class Bot(object):
                                + str(path[-1]) + " " + str(region.armies - 1) + ",")
         if outStr == "":
             outStr += "No moves"
-            self.last_move += 1
-        else:
+            
+        if not attacked:
             self.last_move = 0
+        else:
+            self.last_move += 1
+
         print(outStr)
 
     def process_input(self, cmd):

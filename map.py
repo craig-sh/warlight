@@ -131,22 +131,26 @@ class Map(object):
         #print ("Path:",path,file=sys.stderr)
         self.clean_up()
         return path
-    def closest_enemy(self,region):
+
+    def closest_enemy(self, region):
         path = []
-        dest = self.BFS(region, lambda x: x.occupant != region.occupant and  x.occupant != 'neutral')
+        dest = self.BFS(
+            region, lambda x: x.occupant != region.occupant and x.occupant != 'neutral')
         self.get_path(region, dest, path)
         self.clean_up()
         return path
-    def safest_path_to_enemy(self,region):
+
+    def safest_path_to_enemy(self, region):
         path = []
-        dest = self.safe_BFS(region, lambda x: x.occupant != region.occupant and  x.occupant != 'neutral')
+        dest = self.safe_BFS(
+            region, lambda x: x.occupant != region.occupant and x.occupant != 'neutral')
         self.get_path(region, dest, path)
         self.clean_up()
         return path
+
     def get_placement_score(self, region, name, opponent_name,
                             placements, last_move=0):
-        FILL_CONTINENTS = 3
-        SURVIVAL = 0.6
+        SURVIVAL = 0.4
         score = 0
         for neighbor in region.neighbors:
             if neighbor.occupant == opponent_name:
@@ -157,11 +161,11 @@ class Map(object):
                 #diff = abs(new_ratio - current_ratio)
                 if region.can_defend(neighbor) == True and region.can_attack(neighbor) == False:
                     if region.can_attack(neighbor, new_units):
-                        score += 1.0
-                elif region.can_defend(neighbor,new_units) == True and region.can_attack(neighbor) == False:
-                    score += 1.0
-                elif region.can_defend(neighbor,new_units) > SURVIVAL :
-                    score += 0.2
+                        score += 4.0
+                elif region.can_defend(neighbor, new_units) == True and region.can_attack(neighbor) == False:
+                    score += 4.0
+                elif region.can_defend(neighbor, new_units) > SURVIVAL:
+                    score += 3.0
 
         if not region.scout:
             region.scout = True
@@ -174,13 +178,14 @@ class Map(object):
                    region.super_region.remaining_regions <= 2:
                     if neighbor.strongest(name) == region and \
                        region.armies < 5:
-                        score += float(FILL_CONTINENTS) * float(((len(region.super_region.children)
-                                                                  - region.super_region.remaining_regions) /
-                                                                 float(len(region.super_region.children))))
+                        score += 1.0 + 0.2 * last_move
                 elif neighbor.super_region == region.super_region:
-                    score += 0.4 +  last_move * 0.4
+                    score += 0.4 + last_move * 0.6
                 else:
-                    score += 0.2  + last_move * 0.4
+                    score += 0.2 + last_move * 0.6
+            if int(neighbor.super_region.id) == 5:
+                score = score / 10.0
+                #print ("LOLs",file=sys.stderr)
 
         return score
 
