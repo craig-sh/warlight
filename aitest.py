@@ -11,6 +11,7 @@ class Bot(object):
         self.map = Map()
         self.start_armies = 0
         self.opponent_name = ""
+        self.last_move = 0
 
     """
     Updates each super region with the number of remaining
@@ -71,7 +72,7 @@ class Bot(object):
             region = self.map.regions[region_id]
             if region.occupant == self.name:
                 ranks[region] = self.map.get_placement_score(
-                    region, self.name, self.opponent_name, armies)
+                    region, self.name, self.opponent_name, armies,self.last_move)
         # get the top 6 picks
         count = 0
         for region in sorted(ranks, key=ranks.get, reverse=True):
@@ -151,7 +152,7 @@ class Bot(object):
                     region.armies = 1
 
                 elif (enemy):
-                    targets = targets + close_targets
+                    targets =  close_targets + targets
                     targets = sorted(
                         targets,
                         key=lambda target: target.armies, reverse=True)
@@ -193,17 +194,27 @@ class Bot(object):
                         scout = sorted(to_scout, key=lambda x: int(
                             x.super_region == region.super_region), reverse=True)
                         to_send = 0
+                        path = self.map.closest_enemy(region)
+                        #safe_path = self.map.safest_path_to_enemy(region)
+                        if  not scout[0].super_region.is_owned(self.name):
+                            if len(path) and len(path) <= 3:
+                                target = self.map.regions[path[0]]
+                                if target.armies > (target.total_adversaries(self.name) + region.armies) or target.armies < target.total_adversaries(self.name): 
+                                    outStr += (self.name + " attack/transfer " + region_id + " "
+                                       + str(path[-1]) + " " + str(region.armies - 1) + ",")
+                                    armies = 1
                         for i in range(len(scout)):
-                            if armies < SCOUT_FORCE:
-                                break
-                            if i == (len(scout) - 1):
-                                to_send = armies - 1
-                            else:
-                                to_send = SCOUT_FORCE
+                            #if armies < SCOUT_FORCE:
+                            #    break
+                            #if i == (len(scout) - 1):
+                            #to_send = armies - 1
+                            #else:
+                            to_send = SCOUT_FORCE
                             outStr += (self.name + " attack/transfer " +
                                        region_id + " " + scout[i].id +
                                        " " + str(to_send) + ",")
                             armies -= to_send
+                            break
                 # Relocate armies to regions in need
                 elif safe:
                     path = self.map.closest_unowned_region(region)
@@ -211,6 +222,9 @@ class Bot(object):
                                + str(path[-1]) + " " + str(region.armies - 1) + ",")
         if outStr == "":
             outStr += "No moves"
+            self.last_move += 1
+        else:
+            self.last_move = 0
         print(outStr)
 
     def process_input(self, cmd):

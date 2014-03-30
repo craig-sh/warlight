@@ -69,7 +69,7 @@ class Map(object):
     matches the terminate condition
     """
 
-    def BFS(self, source, terminate_case):
+    def BFS(self, source, terminate_case=None):
         source.color = 'GRAY'
         source.dis = 0
         source.pi = None
@@ -80,6 +80,28 @@ class Map(object):
             self.clean_up_queue.append(u)
             for v in u.neighbors:
                 if v.color == 'WHITE':
+                    v.color = 'GRAY'
+                    v.dis = u.dis + 1
+                    v.pi = u
+                    queue.appendleft(v)
+                    self.clean_up_queue.append(v)
+                # if we found what we are looking for just exit
+                if terminate_case(v):
+                    return v
+            # not really needed
+            u.color = 'BLACK'
+
+    def safe_BFS(self, source, terminate_case):
+        source.color = 'GRAY'
+        source.dis = 0
+        source.pi = None
+        queue = deque()
+        queue.append(source)
+        while len(queue) != 0:
+            u = queue.pop()
+            self.clean_up_queue.append(u)
+            for v in u.neighbors:
+                if v.color == 'WHITE' and v.occupant != 'neutral':
                     v.color = 'GRAY'
                     v.dis = u.dis + 1
                     v.pi = u
@@ -109,29 +131,45 @@ class Map(object):
         #print ("Path:",path,file=sys.stderr)
         self.clean_up()
         return path
-
+    def closest_enemy(self,region):
+        path = []
+        dest = self.BFS(region, lambda x: x.occupant != region.occupant and  x.occupant != 'neutral')
+        self.get_path(region, dest, path)
+        self.clean_up()
+        return path
+    def safest_path_to_enemy(self,region):
+        path = []
+        dest = self.safe_BFS(region, lambda x: x.occupant != region.occupant and  x.occupant != 'neutral')
+        self.get_path(region, dest, path)
+        self.clean_up()
+        return path
     def get_placement_score(self, region, name, opponent_name,
                             placements, last_move=0):
         FILL_CONTINENTS = 3
+        SURVIVAL = 0.6
         score = 0
         for neighbor in region.neighbors:
             if neighbor.occupant == opponent_name:
+                region.scout = False
                 new_units = region.armies + placements
                 #current_ratio = float(enemy_units) / float(units)
                 #new_ratio = float(enemy_units) / (float(new_units))
                 #diff = abs(new_ratio - current_ratio)
-                if region.can_defend(neighbor):
+                if region.can_defend(neighbor) == True and region.can_attack(neighbor) == False:
                     if region.can_attack(neighbor, new_units):
                         score += 1.0
-                    else:
-                        score += 0.1
-                else:
-                    # FIXME - Change this
-                    score += 0.7
+                elif region.can_defend(neighbor,new_units) == True and region.can_attack(neighbor) == False:
+                    score += 1.0
+                elif region.can_defend(neighbor,new_units) > SURVIVAL :
+                    score += 0.2
+
+        if not region.scout:
+            region.scout = True
+            return score
                 #print ("LOLs",file=sys.stderr)
                 #score += (float(neighbor.armies)/float(region.armies)) * 0.1 + 0.2 * 1* int(region.same_super(neighbor))
-
-            elif neighbor.occupant == 'neutral':
+        for neighbor in region.neighbors:
+            if neighbor.occupant == 'neutral':
                 if neighbor.super_region == region.super_region and \
                    region.super_region.remaining_regions <= 2:
                     if neighbor.strongest(name) == region and \
@@ -140,9 +178,9 @@ class Map(object):
                                                                   - region.super_region.remaining_regions) /
                                                                  float(len(region.super_region.children))))
                 elif neighbor.super_region == region.super_region:
-                    score += 0.4
+                    score += 0.4 +  last_move * 0.4
                 else:
-                    score += 0.2
+                    score += 0.2  + last_move * 0.4
 
         return score
 

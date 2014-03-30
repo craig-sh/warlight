@@ -18,7 +18,7 @@ class SuperRegion(object):
         for region in self.children:
             if region.occupant == name:
                 total_regs += 1
-        if float(total_regs) / float(len(self.children)) > 0.5:
+        if float(total_regs) / float(len(self.children)) >= 0.5:
             return True
         else:
             return False
@@ -36,6 +36,7 @@ class Region(object):
         self.color = 'WHITE'
         self.dis = float('inf')
         self.pi = None
+        self.scout = True
 
     def add_neighbor(self, neighbor):
         # neighnor should be an object this will
@@ -58,7 +59,7 @@ class Region(object):
         armies = 0
         for neighbor in self.neighbors:
             if neighbor.occupant == name:
-                armies += neighbor.armies
+                armies += neighbor.armies - 1 
         return armies
 
     """
@@ -91,4 +92,4 @@ class Region(object):
         if ratio > DEFENSE_FACTOR:
             return True
         else:
-            return False
+            return ratio
