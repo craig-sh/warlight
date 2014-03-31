@@ -178,13 +178,13 @@ class Map(object):
                    region.super_region.remaining_regions <= 2:
                     if neighbor.strongest(name) == region and \
                        region.armies < 5:
-                        score += 1.0 + 0.2 * last_move
+                        score += 3.0 + 1.0 * last_move
                 elif neighbor.super_region == region.super_region:
-                    score += 0.4 + last_move * 0.6
+                    score += 0.4 + last_move * 0.5
                 else:
-                    score += 0.2 + last_move * 0.6
-            if int(neighbor.super_region.id) == 5:
-                score = score / 10.0
+                    score += 0.2 + last_move * 0.5
+                if int(neighbor.super_region.id) == 5:
+                    score = score / 5.0
                 #print ("LOLs",file=sys.stderr)
 
         return score

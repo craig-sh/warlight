@@ -106,7 +106,7 @@ class Bot(object):
 
     def debug_placments(self,ranks):
         print ("=================Round:"+str(self.round) + "=====================",file=sys.stderr)
-        for region in ranks.keys():            
+        for region in ranks.keys():
             print (self.region_strings[int(region.id)-1] ,ranks[region],file=sys.stderr)
 
     """
@@ -160,7 +160,7 @@ class Bot(object):
 
     def attack(self):
         regions = self.map.regions
-        SAFETY_FACTOR = 1.5
+        SAFETY_FACTOR = 2.33
         SCOUT_FORCE = 4
         threat = {}
         outStr = ""
@@ -171,7 +171,7 @@ class Bot(object):
                 continue
             if regions[region_id].occupant == self.name:
                 threat[region] = 0
-                enemy = None
+                enemy = False
                 to_scout = []
                 close_targets = []
                 targets = []
@@ -198,11 +198,19 @@ class Bot(object):
                     key=lambda target: target.armies, reverse=True)
                 if(enemy and threat[region] < region.armies):
                     final_targets = close_targets + targets
-                    if region.can_attack(final_targets[0]):
-                       outStr += (self.name + " attack/transfer " + region.id + " "
-                       + final_targets[0].id + " " +  str(region.armies - 1)+ ",")
-                    region.armies = 1
-                    attacked = True
+                    for targ in final_targets:
+                        if region.armies <=1:
+                            break
+                        arms = region.can_attack(targ)
+                        if arms:
+                            outStr += (self.name + " attack/transfer " +
+                                       region.id + " " + targ.id + " " +
+                                       str(arms) + ",")
+                            region.armies -= arms
+                            attacked = True
+                        else:
+                            break
+
 #FIXME ----Needs reviewing
                 elif (enemy):
                     targets =  close_targets + targets
@@ -215,7 +223,7 @@ class Bot(object):
                             outStr += (self.name + " attack/transfer " +
                                        region.id + " " + targ.id + " " +
                                        str(int(region.armies) - 1) + ",")
-                        attacked = True    
+                        attacked = True
                         break
 
                 elif (not safe):
@@ -244,32 +252,31 @@ class Bot(object):
                         #    reinforce = region.strongest(self.name,lambda x:x.super_region==region.super_region)
                         # if reinforce:
 
-                    else:
+                    elif(len(to_scout)):
                         scout = sorted(to_scout, key=lambda x: int(
                             x.super_region == region.super_region), reverse=True)
                         to_send = 0
-                        path = self.map.closest_enemy(region)
-                        #safe_path = self.map.safest_path_to_enemy(region)
-                        if  not scout[0].super_region.is_owned(self.name):
-                            if len(path) and len(path) <= 3:
-                                target = self.map.regions[path[0]]
-                                if target.armies > (target.total_adversaries(self.name) + region.armies) or target.armies < target.total_adversaries(self.name): 
-                                    outStr += (self.name + " attack/transfer " + region_id + " "
-                                       + str(path[-1]) + " " + str(region.armies - 1) + ",")
-                                    armies = 1
+                        #path = self.map.closest_enemy(region)
+                        ##safe_path = self.map.safest_path_to_enemy(region)
+                        #if  not scout[0].super_region.is_owned(self.name):
+                        #    if len(path) and len(path) <= 3:
+                        #        target = self.map.regions[path[0]]
+                        #        if target.armies > (target.total_adversaries(self.name) + region.armies) or target.armies < target.total_adversaries(self.name):
+                        #            outStr += (self.name + " attack/transfer " + region_id + " "
+                        #               + str(path[-1]) + " " + str(region.armies - 1) + ",")
+                        #            armies = 1
                         for i in range(len(scout)):
-                            #if armies < SCOUT_FORCE:
-                            #    break
-                            #if i == (len(scout) - 1):
-                            #to_send = armies - 1
-                            #else:
-                            to_send = SCOUT_FORCE
+                            if armies < SCOUT_FORCE - 1:
+                                break
+                            if i == (len(scout) - 1):
+                                to_send = armies - 1
+                            else:
+                                to_send = SCOUT_FORCE
                             outStr += (self.name + " attack/transfer " +
-                                       region_id + " " + scout[i].id +
+                                      region_id + " " + scout[i].id +
                                        " " + str(to_send) + ",")
                             armies -= to_send
                             attacked = True
-                            break
                 # Relocate armies to regions in need
                 elif safe:
                     path = self.map.closest_unowned_region(region)
@@ -277,7 +284,7 @@ class Bot(object):
                                + str(path[-1]) + " " + str(region.armies - 1) + ",")
         if outStr == "":
             outStr += "No moves"
-            
+
         if not attacked:
             self.last_move = 0
         else:

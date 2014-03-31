@@ -63,7 +63,7 @@ class Region(object):
         return armies
 
     """
-    Retrurns a boolean specifying if 'neighbor'
+    Retrurns a how many armies to attack with specifying if 'neighbor'
     can be safely attacked
     """
 
@@ -73,10 +73,10 @@ class Region(object):
         SAFETY_UNITS = 5
         SAFETY_FACTOR = 2.33
         enemy_units = self.total_adversaries(neighbor.occupant) + SAFETY_UNITS
-        if enemy_units < 1:
-            return True
+        if enemy_units <= 1:
+            return 4
         if armies > float(enemy_units) * SAFETY_FACTOR:
-            return True
+            return int(float(enemy_units) * SAFETY_FACTOR)
         else:
             return False
 
