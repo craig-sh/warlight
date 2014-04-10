@@ -149,18 +149,18 @@ class Bot(object):
         print(outStr)
 
     """
-        #Scan through all visible regions belonging to us
-        #Attack the neighbor with the highest amount of enemy units
-        #But only if we have more units
-        #If we have no enemy neighbors
-        #Scout out surrounding locations
+        Scan through all visible regions belonging to us
+        Attack the neighbor with the highest amount of enemy units
+        But only if we have more units
+        If we have no enemy neighbors
+        Scout out surrounding locations
         FIXME Optimize these loops so that the only
         access our own stored locations
     """
 
     def attack(self):
         regions = self.map.regions
-        SAFETY_FACTOR = 2.33
+        SAFETY_FACTOR = 1.7
         SCOUT_FORCE = 4
         threat = {}
         outStr = ""

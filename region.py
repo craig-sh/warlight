@@ -70,8 +70,8 @@ class Region(object):
     def can_attack(self, neighbor, armies=None):
         if not armies:
             armies = self.armies
-        SAFETY_UNITS = 5
-        SAFETY_FACTOR = 2.33
+        SAFETY_UNITS = 2
+        SAFETY_FACTOR = 1.7
         enemy_units = self.total_adversaries(neighbor.occupant) + SAFETY_UNITS
         if enemy_units <= 1:
             return 4
@@ -84,7 +84,7 @@ class Region(object):
         if not armies:
             armies = self.armies
         SAFETY_UNITS = 2
-        DEFENSE_FACTOR = 0.9
+        DEFENSE_FACTOR = 0.8
         enemy_units = float(self.total_adversaries(neighbor.occupant) + SAFETY_UNITS)
         if enemy_units < 1:
             return True
