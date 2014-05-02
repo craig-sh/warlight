@@ -13,50 +13,50 @@ class Bot(object):
         self.opponent_name = ""
         self.last_move = 0
         self.round = 0
-        self.region_strings =   [
-                                    "Alaska",
-                                    "Northwest Territory",
-                                    "Greenland",
-                                    "Alberta",
-                                    "Ontario",
-                                    "Quebec",
-                                    "Western United States",
-                                    "Eastern United States",
-                                    "Central America",
-                                    "Venezuela",
-                                    "Peru",
-                                    "Brazil",
-                                    "Argentina",
-                                    "Iceland",
-                                    "Great Britain",
-                                    "Scandinavia",
-                                    "Ukraine",
-                                    "Western Europe",
-                                    "Northern Europe",
-                                    "Southern Europe",
-                                    "North Africa",
-                                    "Egypt",
-                                    "East Africa",
-                                    "Congo",
-                                    "South Africa",
-                                    "Madagascar",
-                                    "Ural",
-                                    "Siberia",
-                                    "Yakutsk",
-                                    "Kamchatka",
-                                    "Irkutsk",
-                                    "Kazakhstan",
-                                    "China",
-                                    "Mongolia",
-                                    "Japan",
-                                    "Middle East",
-                                    "India",
-                                    "Siam",
-                                    "Indonesia",
-                                    "New Guinea",
-                                    "Western Australia",
-                                    "Eastern Australia"
-                                ]
+        self.region_strings = [
+            "Alaska",
+            "Northwest Territory",
+            "Greenland",
+            "Alberta",
+            "Ontario",
+            "Quebec",
+            "Western United States",
+            "Eastern United States",
+            "Central America",
+            "Venezuela",
+            "Peru",
+            "Brazil",
+            "Argentina",
+            "Iceland",
+            "Great Britain",
+            "Scandinavia",
+            "Ukraine",
+            "Western Europe",
+            "Northern Europe",
+            "Southern Europe",
+            "North Africa",
+            "Egypt",
+            "East Africa",
+            "Congo",
+            "South Africa",
+            "Madagascar",
+            "Ural",
+            "Siberia",
+            "Yakutsk",
+            "Kamchatka",
+            "Irkutsk",
+            "Kazakhstan",
+            "China",
+            "Mongolia",
+            "Japan",
+            "Middle East",
+            "India",
+            "Siam",
+            "Indonesia",
+            "New Guinea",
+            "Western Australia",
+            "Eastern Australia"
+        ]
 
     """
     Updates each super region with the number of remaining
@@ -103,11 +103,12 @@ class Bot(object):
             break
         print(outStr)
 
-
-    def debug_placments(self,ranks):
-        print ("=================Round:"+str(self.round) + "=====================",file=sys.stderr)
+    def debug_placments(self, ranks):
+        print("=================Round:" + str(self.round)
+              + "=====================", file=sys.stderr)
         for region in ranks.keys():
-            print (self.region_strings[int(region.id)-1] ,ranks[region],file=sys.stderr)
+            print(
+                self.region_strings[int(region.id) - 1], ranks[region], file=sys.stderr)
 
     """
     Calls the map function to 'score' each region
@@ -123,7 +124,7 @@ class Bot(object):
             region = self.map.regions[region_id]
             if region.occupant == self.name:
                 ranks[region] = self.map.get_placement_score(
-                    region, self.name, self.opponent_name, armies,self.last_move)
+                    region, self.name, self.opponent_name, armies, self.last_move)
         # get the top 6 picks
         count = 0
         for region in sorted(ranks, key=ranks.get, reverse=True):
@@ -199,7 +200,7 @@ class Bot(object):
                 if(enemy and threat[region] < region.armies):
                     final_targets = close_targets + targets
                     for targ in final_targets:
-                        if region.armies <=1:
+                        if region.armies <= 1:
                             break
                         arms = region.can_attack(targ)
                         if arms:
@@ -211,15 +212,15 @@ class Bot(object):
                         else:
                             break
 
-#FIXME ----Needs reviewing
+# FIXME ----Needs reviewing
                 elif (enemy):
-                    targets =  close_targets + targets
+                    targets = close_targets + targets
                     targets = sorted(
                         targets,
                         key=lambda target: target.armies, reverse=True)
                     for targ in targets:
                         strength = targ.total_adversaries(self.name)
-                        if region.can_attack(targ,strength - 2):
+                        if region.can_attack(targ, strength - 2):
                             outStr += (self.name + " attack/transfer " +
                                        region.id + " " + targ.id + " " +
                                        str(int(region.armies) - 1) + ",")
@@ -235,9 +236,9 @@ class Bot(object):
                             if neighbor.occupant == self.name:
                                 scores[neighbor] = self.map.get_placement_score(
                                     neighbor, self.name,
-                                    self.opponent_name,armies-1)
+                                    self.opponent_name, armies - 1)
                         scores[region] = self.map.get_placement_score(
-                            region, self.name, self.opponent_name,armies-1)
+                            region, self.name, self.opponent_name, armies - 1)
                         for reg in sorted(scores, key=scores.get,
                                           reverse=True):
                             if region == reg:
@@ -258,7 +259,7 @@ class Bot(object):
                         to_send = 0
                         #path = self.map.closest_enemy(region)
                         ##safe_path = self.map.safest_path_to_enemy(region)
-                        #if  not scout[0].super_region.is_owned(self.name):
+                        # if  not scout[0].super_region.is_owned(self.name):
                         #    if len(path) and len(path) <= 3:
                         #        target = self.map.regions[path[0]]
                         #        if target.armies > (target.total_adversaries(self.name) + region.armies) or target.armies < target.total_adversaries(self.name):
@@ -273,7 +274,7 @@ class Bot(object):
                             else:
                                 to_send = SCOUT_FORCE
                             outStr += (self.name + " attack/transfer " +
-                                      region_id + " " + scout[i].id +
+                                       region_id + " " + scout[i].id +
                                        " " + str(to_send) + ",")
                             armies -= to_send
                             attacked = True

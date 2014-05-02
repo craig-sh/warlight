@@ -72,11 +72,14 @@ class Region(object):
             armies = self.armies
         SAFETY_UNITS = 2
         SAFETY_FACTOR = 1.7
+        ATTACK_LEAD = 8
         enemy_units = self.total_adversaries(neighbor.occupant) + SAFETY_UNITS
         if enemy_units <= 1:
             return 4
         if armies > float(enemy_units) * SAFETY_FACTOR:
             return int(float(enemy_units) * SAFETY_FACTOR)
+        elif armies >= enemy_units + ATTACK_LEAD:
+            return armies
         else:
             return False
 
@@ -84,7 +87,7 @@ class Region(object):
         if not armies:
             armies = self.armies
         SAFETY_UNITS = 2
-        DEFENSE_FACTOR = 0.8
+        DEFENSE_FACTOR = 0.9
         enemy_units = float(self.total_adversaries(neighbor.occupant) + SAFETY_UNITS)
         if enemy_units < 1:
             return True

@@ -195,7 +195,7 @@ class Map(object):
         # 3. Want to weight caputuring a continent before attacking an enemy
     def get_attacks(self, region, name, opponent_name):
         moves = {}
-        SAFETY_NET = 2.33
+        SAFETY_NET = 1.7
         SCOUT_FORCE = 4
         RISKY_SCOUT = False
         HIGH_NUM = 1000
