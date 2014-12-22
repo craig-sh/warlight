@@ -13,19 +13,18 @@ class Map(object):
         self.visible_regions = []
 
     def add_super_region(self, super_region_id, bonus):
-        self.super_regions[super_region_id] = (SuperRegion(super_region_id, bonus))
+        self.super_regions[super_region_id] = (
+            SuperRegion(super_region_id, bonus))
 
     def add_region(self, region_id, super_region_id):
-        self.regions[region_id] = (Region(region_id, self.super_regions[super_region_id]))
+        self.regions[region_id] = (
+            Region(region_id, self.super_regions[super_region_id]))
         self.super_regions[super_region_id].add_child(self.regions[region_id])
-
-    def set_wasteland(self, region_id):
-        #FIXME -- Is this 10?
-        self.region[region_id].armies = 10
 
     def add_neighbors(self, region_id, neighbors):
         if not type(region_id) is str:
-            print("ERROR: region id ", str(region_id), " must be int", file=sys.stderr)
+            print("ERROR: region id ", str(region_id),
+                  " must be int", file=sys.stderr)
         for neighbor in neighbors:
             # Add a bi-directional refrence between neighbors
             self.regions[region_id].add_neighbor(self.regions[neighbor])
@@ -38,7 +37,7 @@ class Map(object):
 
     def shortest_path(self, region_from, region_to):
         # FIXME
-        print ("TODO")
+        print("TODO")
 
     def fill_queue(self):
         for region in self.regions:
@@ -70,7 +69,7 @@ class Map(object):
     matches the terminate condition
     """
 
-    def BFS(self, source, terminate_case):
+    def BFS(self, source, terminate_case=None):
         source.color = 'GRAY'
         source.dis = 0
         source.pi = None
@@ -81,6 +80,28 @@ class Map(object):
             self.clean_up_queue.append(u)
             for v in u.neighbors:
                 if v.color == 'WHITE':
+                    v.color = 'GRAY'
+                    v.dis = u.dis + 1
+                    v.pi = u
+                    queue.appendleft(v)
+                    self.clean_up_queue.append(v)
+                # if we found what we are looking for just exit
+                if terminate_case(v):
+                    return v
+            # not really needed
+            u.color = 'BLACK'
+
+    def safe_BFS(self, source, terminate_case):
+        source.color = 'GRAY'
+        source.dis = 0
+        source.pi = None
+        queue = deque()
+        queue.append(source)
+        while len(queue) != 0:
+            u = queue.pop()
+            self.clean_up_queue.append(u)
+            for v in u.neighbors:
+                if v.color == 'WHITE' and v.occupant != 'neutral':
                     v.color = 'GRAY'
                     v.dis = u.dis + 1
                     v.pi = u
@@ -105,60 +126,66 @@ class Map(object):
 
     def closest_unowned_region(self, region):
         path = []
-        dest = self.BFS(region, lambda x: x.occupant != region.occupant and x.occupant != 'neutral')
+        dest = self.BFS(region, lambda x: x.occupant != region.occupant)
         self.get_path(region, dest, path)
-        print ("Path:", path, file=sys.stderr)
+        #print ("Path:",path,file=sys.stderr)
         self.clean_up()
         return path
 
-    def get_placement_score(self, region, name, opponent_name):
-        DEFENSE = 0.9
-        ATTACK = 1.5
-        SCOUT = 0.2
-        FILL_CONTINENTS = 3
-        MINIMUM_SCOUT_FORCE = 5
-        super_region = region.super_region
-        threat = {}
+    def closest_enemy(self, region):
+        path = []
+        dest = self.BFS(
+            region, lambda x: x.occupant != region.occupant and x.occupant != 'neutral')
+        self.get_path(region, dest, path)
+        self.clean_up()
+        return path
+
+    def safest_path_to_enemy(self, region):
+        path = []
+        dest = self.safe_BFS(
+            region, lambda x: x.occupant != region.occupant and x.occupant != 'neutral')
+        self.get_path(region, dest, path)
+        self.clean_up()
+        return path
+
+    def get_placement_score(self, region, name, opponent_name,
+                            placements, last_move=0):
+        SURVIVAL = 0.4
         score = 0
         for neighbor in region.neighbors:
             if neighbor.occupant == opponent_name:
+                region.scout = False
+                new_units = region.armies + placements
+                #current_ratio = float(enemy_units) / float(units)
+                #new_ratio = float(enemy_units) / (float(new_units))
+                #diff = abs(new_ratio - current_ratio)
+                if region.can_defend(neighbor) is True and region.can_attack(neighbor) is False:
+                    if region.can_attack(neighbor, new_units):
+                        score += 4.0
+                elif region.can_defend(neighbor, new_units) is True and region.can_attack(neighbor) is False:
+                    score += 4.0
+                elif region.can_defend(neighbor, new_units) > SURVIVAL:
+                    score += 3.0
+
+        if not region.scout:
+            region.scout = True
+            return score
+                #print ("LOLs",file=sys.stderr)
+                #score += (float(neighbor.armies)/float(region.armies)) * 0.1 + 0.2 * 1* int(region.same_super(neighbor))
+        for neighbor in region.neighbors:
+            if neighbor.occupant == 'neutral':
                 if neighbor.super_region == region.super_region and \
                    region.super_region.remaining_regions <= 2:
-                    if neighbor.strongest(name) == region:
-                        score += 2.0
-                        #float(neighbor.armies)/float(region.armies) *2* ATTACK
-                    # elif float(region.armies)/float(neighbor.armies) < ATTACK:
-                    #    pass
-                elif float(region.armies) / float(neighbor.armies) \
-                        < float(DEFENSE):
-                    if(neighbor.strongest(name) == region):
-                        score += 1.0
-                    # float(neighbor.armies)/float(region.armies)
-                    # else:
-                    #    pass
-
-                # elif (region.armies - neighbor.armies)/region.armies \
-                #   < (ATTACK):
-                #    score += 1
+                    if neighbor.strongest(name) == region and \
+                       region.armies < 5:
+                        score += 3.0 + 1.0 * last_move
+                elif neighbor.super_region == region.super_region:
+                    score += 0.4 + last_move * 0.5
                 else:
-                    score += 0.5
-                    #(float(neighbor.armies)/float(region.armies)) / 2.0
-            elif neighbor.occupant == 'neutral':
-                if neighbor.super_region == region.super_region and \
-                   region.super_region.remaining_regions <= 2 and \
-                   region.armies < MINIMUM_SCOUT_FORCE:
-                    if neighbor.strongest(name) == region:
-                        score += 1.5
-                        # float(FILL_CONTINENTS) * float(((len(region.super_region.children) \
-                        #        - region.super_region.remaining_regions)/ \
-                        #        float(len(region.super_region.children))))
-                elif region.armies < MINIMUM_SCOUT_FORCE:
-                    if neighbor.super_region == region.super_region:
-                        if neighbor.strongest(name) == region and neighbor.strongest(name).armies < MINIMUM_SCOUT_FORCE:
-                            score += 0.75
-                            #score += 2*SCOUT + 0.25*region.armies
-                    else:
-                        score += 0.25
+                    score += 0.2 + last_move * 0.5
+                if int(neighbor.super_region.id) == 5:
+                    score = score / 5.0
+                #print ("LOLs",file=sys.stderr)
 
         return score
 
@@ -166,6 +193,30 @@ class Map(object):
         # 1. enemy beside you
         # 2. Don't want to expand out of continent before capturing it
         # 3. Want to weight caputuring a continent before attacking an enemy
+    def get_attacks(self, region, name, opponent_name):
+        moves = {}
+        SAFETY_NET = 1.7
+        SCOUT_FORCE = 4
+        RISKY_SCOUT = False
+        HIGH_NUM = 1000
+        armies = region.armies - 1
+        safe = True
+        for neighbor in region.neighbors:
+            if neighbor.occupant == opponent_name:
+                safe = False
+                if float(armies) / float(neighbor.armies) < SAFETY_NET:
+                    if neighbor.total_adversaries(name) > \
+                            float(neighbor.armies) * SAFETY_NET:
 
-    def get_attack_score(self, reigon, name, opponent_name):
-        pass
+                        moves[neighbor] = armies + 1 * int(
+                            region.same_super(neighbor)) + HIGH_NUM
+                else:
+                    moves[neighbor] = float(armies) + 1 * int(
+                        region.same_super(neighbor)) + HIGH_NUM
+        if safe:
+            for neighbor in region.neighbors:
+                if neighbor.occupant == 'neutral':
+                    if armies >= SCOUT_FORCE:
+                        moves[neighbor] = SCOUT_FORCE + 1 * int(
+                            region.same_super(neighbor))
+        return moves
