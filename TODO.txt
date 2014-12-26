@@ -2,9 +2,20 @@ When the enemy controls the last territory in a continent weight it more so that
 
 Update map with enemy moves, so we don't make stupid attacks
 
-If the current region borders an enemy and another friendly region borders taht enemy region too 
+If the current region borders an enemy and another friendly region borders taht enemy region too
 and the current region's  army is less than the other friendly army, explore
 
 Bot always moves entire army currently. Some situations may require it not to.
 
 Bot always reinforces regions that are in danger of being taken over by enemies. Results in stalemates.
+
+=============================
+warlight version 2
+=============================
+
+=========
+Game start
+=========
+[DONE]  Update code to use new pick_starting_region format
+[TODO]  Add in checks so that when choosing starting locations we take
+        proximity to already owened regions into account

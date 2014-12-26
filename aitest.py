@@ -46,6 +46,8 @@ class Bot(object):
         outStr = "%s" % sregs[0].id
         print(outStr)
 
+        sregs[0].owner = self.name
+
     def debug_placments(self, ranks):
         print("=================Round:" + str(self.round)
               + "=====================", file=sys.stderr)
