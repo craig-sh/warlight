@@ -32,31 +32,18 @@ class Bot(object):
     """
 
     def start_pick(self, regions):
-        count = {}
-        picks = {}
-        picks_left = 6
-        # self.map.weight_super_regions()
-        for region in regions:
-            super_region = self.map.regions[region].super_region
-            if not super_region in count:
-                count[super_region] = 0
-                picks[super_region] = []
-            count[super_region] += super_region.bonus
-            picks[super_region].append(region)
-        outStr = ""
-        for w in sorted(count, key=count.get):
-            # print(w.id,count[w])
-            for reg in picks[w]:
-                outStr += reg + " "
-                picks_left -= 1
-                if picks_left == 0:
-                    break
-            # for loop will normally trigger else
-            # if break gets called in the inner loop
-            # it will skip the else
-            else:
-                continue
-            break
+        #FIXME - this only needs to be run once
+        self.map.weight_super_regions()
+
+        regs = map(lambda x: self.map.regions[x], regions)
+        #pythons sorted is stable so we can just sort twice
+        #for multilevel sorting.
+        #https://docs.python.org/2/howto/sorting.html#sort-stability-and-complex-sorts
+
+        sregs = sorted(regs, key=lambda x: x.super_region.weighted_bonus)
+        sregs = sorted(sregs, key=lambda x: x.super_region.get_num_owned(self.name))
+
+        outStr = "%s" % sregs[0].id
         print(outStr)
 
     def debug_placments(self, ranks):
@@ -259,7 +246,7 @@ class Bot(object):
             elif cmd[1] == 'starting_armies':
                 self.start_armies = int(cmd[2])
 
-        elif cmd[0] == 'pick_starting_regions':
+        elif cmd[0] == 'pick_starting_region':
             self.start_pick(cmd[2:])
         elif cmd[0] == 'setup_map':
             if cmd[1] == 'super_regions':

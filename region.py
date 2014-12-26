@@ -13,6 +13,9 @@ class SuperRegion(object):
         # be similar to an array of pointers?
         self.children.append(child)
 
+    def get_num_owned(self, name):
+        return sum(1 for reg in self.children if reg.occupant == name)
+
     def is_owned(self, name):
         total_regs = 0
         for region in self.children:

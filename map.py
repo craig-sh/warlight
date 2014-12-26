@@ -21,17 +21,17 @@ class Map(object):
             Region(region_id, self.super_regions[super_region_id]))
         self.super_regions[super_region_id].add_child(self.regions[region_id])
 
-    def add_neighbors(self, region_id, neighbors):
+    def add_neighbors(self, region_id, neighbor_ids):
         if not type(region_id) is str:
             print("ERROR: region id ", str(region_id),
                   " must be int", file=sys.stderr)
-        for neighbor in neighbors:
+        for neighbor in neighbor_ids:
             # Add a bi-directional refrence between neighbors
             self.regions[region_id].add_neighbor(self.regions[neighbor])
             self.regions[neighbor].add_neighbor(self.regions[region_id])
 
     def weight_super_regions(self):
-        for super_region in self.super_regions:
+        for sid, super_region in self.super_regions.items():
             weight = len(super_region.children)
             super_region.weighted_bonus = super_region.bonus / weight
 
