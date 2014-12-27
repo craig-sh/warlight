@@ -39,7 +39,8 @@ class Region(object):
         self.color = 'WHITE'
         self.dis = float('inf')
         self.pi = None
-        self.scout = True
+        self.placement_score = 0
+        self.attack_score = 0
 
     def add_neighbor(self, neighbor):
         # neighnor should be an object this will
@@ -74,12 +75,12 @@ class Region(object):
         if not armies:
             armies = self.armies
         SAFETY_UNITS = 6
-        SAFETY_FACTOR = 1.1
+        SAFETY_FACTOR = 1.3
         ATTACK_LEAD = 8
         DONT_CARE = 100
         enemy_units = self.total_adversaries(neighbor.occupant) + SAFETY_UNITS
         if enemy_units <= 1:
-            return 4
+            return 3
         if armies > float(enemy_units) * SAFETY_FACTOR:
             safe_attack_force = int(float(enemy_units) * SAFETY_FACTOR) + ATTACK_LEAD
             return min(safe_attack_force, armies)
@@ -89,6 +90,9 @@ class Region(object):
             return False
 
     def can_defend(self, neighbor, armies=None):
+        if neighbor.occupant == 'neutral':
+            return True
+
         if not armies:
             armies = self.armies
         SAFETY_UNITS = 2

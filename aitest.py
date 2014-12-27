@@ -56,6 +56,12 @@ class Bot(object):
                   ranks[region],
                   file=sys.stderr)
 
+    def set_placement_score(self):
+        """ Update all OWNED regions with a score which will dertermine
+            the allocation of armies
+        """
+        pass
+
     """
     Calls the map function to 'score' each region
     Keeps the top 6 and recalculates after each placement

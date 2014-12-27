@@ -148,43 +148,58 @@ class Map(object):
         self.clean_up()
         return path
 
+    def get_importance(self, region):
+        """ Returns a score based on the stategic imporance of a region
+        """
+        score = 0
+        if region.super_region.remaining_regions > 0:
+            score += float(1)/region.super_region.remaining_regions
+
+        return score + 1.0
+
     def get_placement_score(self, region, name, opponent_name,
                             placements, last_move=0):
         SURVIVAL = 0.4
         score = 0
-        for neighbor in region.neighbors:
-            if neighbor.occupant == opponent_name:
-                region.scout = False
-                new_units = region.armies + placements
-                #current_ratio = float(enemy_units) / float(units)
-                #new_ratio = float(enemy_units) / (float(new_units))
-                #diff = abs(new_ratio - current_ratio)
-                if region.can_defend(neighbor) is True and region.can_attack(neighbor) is False:
-                    if region.can_attack(neighbor, new_units):
-                        score += 4.0
-                elif region.can_defend(neighbor, new_units) is True and region.can_attack(neighbor) is False:
-                    score += 4.0
-                elif region.can_defend(neighbor, new_units) > SURVIVAL:
-                    score += 3.0
+        #A region is a scout if it no adjacent region belongs to the enemy
+        ####
+        #psuedocode
+        #for each neighbor
+        # if we can defend w/o reinforcements + 0 points
+        # if we have an oppenent neighbor in the same super region that
+        # we cantake over w/ reinforcements + x points(scale this inversly with # of regions till we own it)
+        #
+        #
+        #
+        ####
 
-        if not region.scout:
-            region.scout = True
-            return score
-                #print ("LOLs",file=sys.stderr)
-                #score += (float(neighbor.armies)/float(region.armies)) * 0.1 + 0.2 * 1* int(region.same_super(neighbor))
+        score = 0
         for neighbor in region.neighbors:
-            if neighbor.occupant == 'neutral':
-                if neighbor.super_region == region.super_region and \
-                   region.super_region.remaining_regions <= 2:
-                    if neighbor.strongest(name) == region and \
-                       region.armies < 5:
-                        score += 3.0 + 1.0 * last_move
-                elif neighbor.super_region == region.super_region:
-                    score += 0.4 + last_move * 0.5
-                else:
-                    score += 0.2 + last_move * 0.5
-                if int(neighbor.super_region.id) == 5:
-                    score = score / 5.0
+            new_units = region.armies + placements
+            #current_ratio = float(enemy_units) / float(units)
+            #new_ratio = float(enemy_units) / (float(new_units))
+            #diff = abs(new_ratio - current_ratio)
+            if region.can_defend(neighbor) is True and region.can_attack(neighbor) is False:
+                if region.can_attack(neighbor, new_units):
+                    score += 1.0 * self.get_placement_score(neighbor)
+            elif region.can_defend(neighbor, new_units) is True and region.can_attack(neighbor) is False:
+                score += 1.0
+            elif region.can_defend(neighbor, new_units) > SURVIVAL:
+                score += 0.75
+
+        #for neighbor in region.neighbors:
+        #    if neighbor.occupant == 'neutral':
+        #        if neighbor.super_region == region.super_region and \
+        #           region.super_region.remaining_regions <= 2:
+        #            if neighbor.strongest(name) == region and \
+        #               region.armies < 5:
+        #                score += 3.0 + 1.0 * last_move
+        #        elif neighbor.super_region == region.super_region:
+        #            score += 0.4 + last_move * 0.5
+        #        else:
+        #            score += 0.2 + last_move * 0.5
+        #        if int(neighbor.super_region.id) == 5:
+        #            score = score / 5.0
                 #print ("LOLs",file=sys.stderr)
 
         return score
